@@ -534,6 +534,9 @@ class DejureOnline
     /**
      * Creates a new directory
      *
+     * Source: Kirby v3 - Bastian Allgeier
+     * See https://getkirby.com/docs/reference/objects/toolkit/dir/make
+     *
      * @param string $dir The path for the new directory
      * @param bool $recursive Create all parent directories, which don't exist
      * @return bool True: the dir has been created, false: creating failed
