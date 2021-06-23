@@ -248,14 +248,11 @@ class DejureOnline
 
         if (empty($result)) {
             # .. otherwise, process & cache it
-            # TODO: Move caching logic to main function,
-            # so it's clear what's happening and when etc
+            # TODO: Move caching logic to main function, so it's clear what's happening and when etc
             $result = $this->connect($text);
         }
 
-        # Einmal zwischen 0 und 6 Uhr alle Dateien im Cacheverzeichnis loeschen,
-        # die aelter als X Tage sind. Dies loest regelmaessig eine aktualisierende
-        # Neuvernetzung aus
+        # Remove expired cache entries every day between 0am - 6am
         # TODO: Remove data dynamically
         if (date('G') < 6) {
             $this->resetCache();
@@ -278,19 +275,22 @@ class DejureOnline
 
         # Convert cache duration from days to seconds
         $cacheDuration = $this->days2seconds($this->cacheDuration);
+
+        # Create hash, using it as filename
         $hash = $this->text2hash($text);
 
+        # If cache file exists, check if ..
         if (file_exists($this->cacheDir . $hash)) {
-            # Datei aelter als Cache-Dauer? Neu vernetzen
+            # .. cache file is expired & has to be renewed, otherwise ..
             if (filemtime($this->cacheDir . $hash) < time() - $cacheDuration) {
                 return false;
             }
 
-            # Cache-Datei auslesen und zurueck geben
+            # .. fetch processed text from cache file
             return file_get_contents($this->cacheDir . $hash);
         }
 
-        # Kein Cache vorhanden. Neu vernetzen
+        # Report back that cache is empty & has to be renewed
         return false;
     }
 
@@ -368,10 +368,11 @@ class DejureOnline
      */
     protected function cacheExpiry(): void
     {
-        $timestamp = mktime(0, 0, 0, date('d'), date('m'), date('Y'));
+        # Prepare file
         $file = fopen($this->cacheDir . 'cache_status', 'w');
 
-        fputs($file, $timestamp);
+        # Add timestamp
+        fputs($file, mktime(0, 0, 0, date('d'), date('m'), date('Y')));
         fclose($file);
     }
 
@@ -421,6 +422,7 @@ class DejureOnline
             $request .= '&' . urlencode($key) . '=' . urlencode($value);
         }
 
+        # (3) .. and prepare request header
         $header = 'POST /dienste/vernetzung/vernetzen HTTP/1.0' . "\r\n";
         $header .= 'User-Agent: ' . $this->provider . ' (PHP-Vernetzung ' . self::DJO_VERSION. ')' . "\r\n";
         $header .= 'Content-type: application/x-www-form-urlencoded' . "\r\n";
