@@ -69,6 +69,17 @@ class DejureOnline
      * Determines whether citation should be linked completely or rather partially
      *
      * Possible values:
+     * 'ohne' | 'mit' | 'auto'
+     *
+     * @var string
+     */
+    protected $lineBreak = 'auto';
+
+
+    /**
+     * Determines whether citation should be linked completely or rather partially
+     *
+     * Possible values:
      * 'weit' | 'schmal'
      *
      * @var string
@@ -264,6 +275,18 @@ class DejureOnline
     }
 
 
+    public function setLineBreak(string $lineBreak): void
+    {
+        $this->lineBreak = $lineBreak;
+    }
+
+
+    public function getLineBreak(): string
+    {
+        return $this->lineBreak;
+    }
+
+
     public function setLinkStyle(string $linkStyle): void
     {
         $this->linkStyle = $linkStyle;
@@ -391,6 +414,9 @@ class DejureOnline
         # Normalize input
         # (1) Whether linking unknown legal norms to `buzer.de` or not needs to be an integer
         $buzer = (int) $this->buzer;
+
+        # (2) Line break only supports three possible options
+        $lineBreak = in_array($this->lineBreak, ['ohne', 'mit', 'auto']) === true ? $this->lineBreak : 'auto';
 
         # (2) Link style only supports two possible options
         $linkStyle = in_array($this->linkStyle, ['weit', 'schmal']) === true ? $this->linkStyle : 'weit';
