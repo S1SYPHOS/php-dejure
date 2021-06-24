@@ -47,6 +47,13 @@ class DejureOnline
     protected $cache;
 
     /**
+     * Determines whether output was fetched from cache
+     *
+     * @var bool
+     */
+    public $fromCache = false;
+
+    /**
      * Defines provider designation
      *
      * @var string
@@ -97,7 +104,7 @@ class DejureOnline
     protected $cacheDuration = 2;
 
     /**
-     * Timeout period for API requests (in seconds)
+     * Defines timeout for API requests (in seconds)
      *
      * @var int
      */
@@ -248,12 +255,14 @@ class DejureOnline
 
         # If cache file exists & its content is valid (= not expired) ..
         if ($this->cache->has($hash) === true) {
-            # .. load processed text from cache, otherwise ..
+            # (1) .. report back
+            $this->fromCache = true;
 
+            # (2) .. load processed text from cache
             return $this->cache->get($hash);
         }
 
-        # .. process text & cache it
+        # .. otherwise, process text & cache it
         return $this->connect($text);
     }
 
