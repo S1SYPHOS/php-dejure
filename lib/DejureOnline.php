@@ -137,6 +137,13 @@ class DejureOnline
      */
     protected $streamTimeout = 10;
 
+    /**
+     * Controls `user agent` header
+     *
+     * @var string
+     */
+    protected $userAgent = null;
+
 
     /*
      * Constructor
@@ -276,6 +283,16 @@ class DejureOnline
         return $this->streamTimeout;
     }
 
+    public function setUserAgent(int $userAgent): void
+    {
+        $this->userAgent = $userAgent;
+    }
+
+    public function getUserAgent(): string
+    {
+        return $this->userAgent;
+    }
+
 
     /**
      * Functionality
@@ -339,6 +356,12 @@ class DejureOnline
         # (2) Whether linking unknown legal norms to `buzer.de` or not needs to be an integer
         $buzer = (int)$this->buzer;
 
+        # (3) User agent for API connections
+        $userAgent = isset($this->userAgent)
+            ? $this->userAgent
+            : $this->provider . ' (PHP-Vernetzung ' . self::DJO_VERSION. ')'
+        ;
+
         # Note: Changing parameters requires a manual cache reset!
         $query = [
             'Originaltext'    => $text,
@@ -360,7 +383,7 @@ class DejureOnline
         try {
             # .. send text for processing, but return unprocessed text if ..
             $response = $client->request('GET', '/dienste/vernetzung/vernetzen', [
-                'headers'      => ['User-Agent' => $this->provider . ' (PHP-Vernetzung ' . self::DJO_VERSION. ')'],
+                'headers'      => ['User-Agent' => $userAgent],
                 'query'        => $query,
                 'read_timeout' => $this->streamTimeout,
                 'stream'       => true,
