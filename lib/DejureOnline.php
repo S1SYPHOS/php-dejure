@@ -54,6 +54,26 @@ class DejureOnline
     public $fromCache = false;
 
     /**
+     * Holds tokens of all possible cache drivers
+     *
+     * See https://github.com/terrylinooo/simple-cache
+     *
+     * @var array
+     */
+    protected $cacheDrivers = [
+        'file',
+        'redis',
+        'mongo',
+        'mysql',
+        'sqlite',
+        'apc',
+        'apcu',
+        'memcache',
+        'memcached',
+        'wincache',
+    ];
+
+    /**
      * Defines provider designation
      *
      * @var string
@@ -115,7 +135,7 @@ class DejureOnline
      * Constructor
      */
 
-    public function __construct(string $cacheDir = './.cache/', string $cacheType = 'file', array $cacheConfig = null) {
+    public function __construct(string $cacheDir = './.cache', string $cacheDriver = 'file', array $cacheConfig = null) {
         # Provide sensible defaults, like ..
         if (isset($_SERVER['HTTP_HOST'])) {
             # (1) .. current domain for provider designation
@@ -137,8 +157,19 @@ class DejureOnline
             'gc_enable' => true,
         ];
 
-        # (3) Initialize new cache object
-        $this->cache = new \Shieldon\SimpleCache\Cache($cacheType, $cacheConfig);
+        # (3) Check provided cache driver
+        if (in_array($cacheDriver, $this->cacheDrivers) === false) {
+            throw new \Exception(sprintf('Cache driver "%s" cannot be initiated', $cacheDriver));
+        }
+
+        # (4) Initialize new cache object
+        $this->cache = new \Shieldon\SimpleCache\Cache($cacheDriver, $cacheConfig);
+
+        # (5) Build database when using SQLite for the first time
+        # TODO: Add check for MySQL, see https://github.com/terrylinooo/simple-cache/issues/8
+        if ($cacheDriver == 'sqlite' && !file_exists(join([$cacheDir, 'cache.sqlite3']))) {
+            $this->cache->rebuild();
+        }
     }
 
 
