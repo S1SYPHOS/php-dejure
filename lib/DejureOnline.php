@@ -135,7 +135,7 @@ class DejureOnline
      * Constructor
      */
 
-    public function __construct(string $cacheDir = './.cache', string $cacheDriver = 'file', array $cacheConfig = null) {
+    public function __construct(string $cacheDir = './.cache', string $cacheDriver = 'file', array $cacheConfig = []) {
         # Provide sensible defaults, like ..
         if (isset($_SERVER['HTTP_HOST'])) {
             # (1) .. current domain for provider designation
@@ -148,24 +148,26 @@ class DejureOnline
         }
 
         # Initialize cache
-        # (1) Create  path to caching directory (if not existent)
-        $this->createDir($cacheDir);
-
-        # (2) Determine caching options
-        $cacheConfig = $cacheConfig ?? [
-            'storage' => $cacheDir,
-            'gc_enable' => true,
-        ];
-
-        # (3) Check provided cache driver
+        # (1) Validate provided cache driver
         if (in_array($cacheDriver, $this->cacheDrivers) === false) {
             throw new \Exception(sprintf('Cache driver "%s" cannot be initiated', $cacheDriver));
         }
 
+        # (2) Create path to caching directory (if not existent) when required by cache driver
+        if (in_array($cacheDriver, ['file', 'sqlite']) === true) {
+            $this->createDir($cacheDir);
+        }
+
+        # (3) Determine caching options
+        $cacheConfig = array_merge([
+            'storage' => $cacheDir,
+            'gc_enable' => true,
+        ], $cacheConfig);
+
         # (4) Initialize new cache object
         $this->cache = new \Shieldon\SimpleCache\Cache($cacheDriver, $cacheConfig);
 
-        # (5) Build database when using SQLite for the first time
+        # (5) Build database if using SQLite for the first time
         # TODO: Add check for MySQL, see https://github.com/terrylinooo/simple-cache/issues/8
         if ($cacheDriver == 'sqlite' && !file_exists(join([$cacheDir, 'cache.sqlite3']))) {
             $this->cache->rebuild();
