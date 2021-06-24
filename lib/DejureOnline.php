@@ -67,7 +67,9 @@ class DejureOnline
 
     /**
      * Determines whether citation should be linked completely or rather partially
-     * Possible values: 'weit' | 'schmal'
+     *
+     * Possible values:
+     * 'weit' | 'schmal'
      *
      * @var string
      */
@@ -80,6 +82,17 @@ class DejureOnline
      * @var string
      */
     protected $target = '';
+
+
+    /**
+     * Controls `title` attribute
+     *
+     * Possible values:
+     * 'ohne' | 'neutral' | 'Gesetze' | 'halb'
+     *
+     * @var string
+     */
+    protected $tooltip = 'neutral';
 
 
     /**
@@ -275,6 +288,18 @@ class DejureOnline
     }
 
 
+    public function setTooltip(string $tooltip): void
+    {
+        $this->tooltip = $tooltip;
+    }
+
+
+    public function getTooltip(): string
+    {
+        return $this->tooltip;
+    }
+
+
     public function setStreamTimeout(int $streamTimeout): void
     {
         $this->streamTimeout = $streamTimeout;
@@ -364,11 +389,14 @@ class DejureOnline
     protected function connect(string $text): string
     {
         # Normalize input
-        # (1) Link style only supports two possible options
+        # (1) Whether linking unknown legal norms to `buzer.de` or not needs to be an integer
+        $buzer = (int) $this->buzer;
+
+        # (2) Link style only supports two possible options
         $linkStyle = in_array($this->linkStyle, ['weit', 'schmal']) === true ? $this->linkStyle : 'weit';
 
-        # (2) Whether linking unknown legal norms to `buzer.de` or not needs to be an integer
-        $buzer = (int) $this->buzer;
+        # (3) Tooltip only supports four possible options
+        $tooltip = in_array($this->tooltip, ['ohne', 'neutral', 'Gesetze', 'halb']) === true ? $this->tooltip : 'neutral';
 
         # Note: Changing parameters requires a manual cache reset!
         $query = [
