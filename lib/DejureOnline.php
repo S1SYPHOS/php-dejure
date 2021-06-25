@@ -369,7 +369,7 @@ class DejureOnline
      * @param string $text Original (unprocessed) text
      * @return string Processed text if successful, otherwise unprocessed text
      */
-    public function dejurify(string $text = ''): string
+    public function dejurify(string $text = '', string $ignore = ''): string
     {
         # Return text as-is if no linkable citations are found
         if (!preg_match("/§|&sect;|Art\.|\/[0-9][0-9](?![0-9\/])| [0-9][0-9]?[\/\.][0-9][0-9](?![0-9\.])|[0-9][0-9], /", $text)) {
@@ -395,7 +395,7 @@ class DejureOnline
         }
 
         # .. otherwise, process text & cache it
-        return $this->connect($text);
+        return $this->connect($text, $ignore);
     }
 
 
@@ -409,7 +409,7 @@ class DejureOnline
      * @param string $text Original (unprocessed) text
      * @return string Processed text if successful, otherwise unprocessed text
      */
-    protected function connect(string $text): string
+    protected function connect(string $text, string $ignore): string
     {
         # Normalize input
         # (1) Whether linking unknown legal norms to `buzer.de` or not needs to be an integer
@@ -429,12 +429,19 @@ class DejureOnline
             'Originaltext'    => $text,
             'Anbieterkennung' => $this->domain . '-' . $this->email,
             'format'          => $linkStyle,
+            'Tooltip'         => $tooltip,
+            'Zeilenwechsel'   => $lineBreak,
             'target'          => $this->target,
             'class'           => $this->class,
             'buzer'           => $buzer,
             'version'         => 'php-dejure@' . self::VERSION,
             'Schema'          => 'https',
         ];
+
+        # Ignore file number (if provided)
+        if (!empty($ignore)) {
+            $query['AktenzeichenIgnorieren'] = $ignore;
+        }
 
         $client = new \GuzzleHttp\Client([
             'base_uri' => 'https://rechtsnetz.dejure.org',
@@ -443,13 +450,12 @@ class DejureOnline
 
         # Dezermine user agent for API connections
         $userAgent = $this->userAgent ?? 'php-dejure v' . self::VERSION . ' @ ' . $this->domain;
-        var_dump($userAgent);
 
         # Try to ..
         try {
             # .. send text for processing, but return unprocessed text if ..
             $response = $client->request('GET', '/dienste/vernetzung/vernetzen', [
-                'headers'      => ['User-Agent' => $userAgent],
+                'headers'      => ['User-Agent' => $userAgent, "Content-Type" => 'application/x-www-form-urlencoded; charset=UTF-8;'],
                 'query'        => $query,
                 'read_timeout' => $this->streamTimeout,
                 'stream'       => true,
