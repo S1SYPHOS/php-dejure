@@ -367,6 +367,7 @@ class DejureOnline
      * Processes linkable citations & caches text (if uncached or expired)
      *
      * @param string $text Original (unprocessed) text
+     * @param string $ignore Judicial file numbers to be ignored
      * @return string Processed text if successful, otherwise unprocessed text
      */
     public function dejurify(string $text = '', string $ignore = ''): string
@@ -407,6 +408,7 @@ class DejureOnline
      * (4) Stores result in cache
      *
      * @param string $text Original (unprocessed) text
+     * @param string $ignore Judicial file numbers to be ignored
      * @return string Processed text if successful, otherwise unprocessed text
      */
     protected function connect(string $text, string $ignore): string
