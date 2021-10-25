@@ -233,7 +233,31 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
 
 
     # TODO: Create test case
-    public function testLineBreak(): void {}
+    public function testLineBreak(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # (2) Line breaks
+        $lineBreaks = [
+            'ohne',
+            'mit',
+            'auto',
+        ];
+
+        # Assert default
+        $this->assertEquals('auto', $object->getLineBreak());
+
+        foreach ($lineBreaks as $lineBreak) {
+            # Run function
+            # TODO: Test actual behaviour
+            $object->setLineBreak($lineBreak);
+
+            # Assert result
+            $this->assertEquals($lineBreak, $object->getLineBreak());
+        }
+    }
 
 
     public function testInvalidLineBreak(): void
