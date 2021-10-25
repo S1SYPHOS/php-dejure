@@ -118,18 +118,69 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
         $result = $dom->getElementsByTagName('a');
 
         # Assert result
-        $this->assertEquals(count($result), 0);
+        $this->assertEquals(0, count($result));
 
         # Run function
         @$dom->loadHTML($object->dejurify(self::$text));
         $result = $dom->getElementsByTagName('a');
 
         # Assert result
-        $this->assertEquals(count($result), 2);
+        $this->assertEquals(2, count($result));
     }
 
 
-    public function testSetClass(): void
+    public function testDomain(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # Assert default
+        $this->assertEquals('', $object->getDomain());
+
+        # Run function
+        $object->setDomain('example.com');
+
+        # Assert result
+        $this->assertEquals('example.com', $object->getDomain());
+    }
+
+
+    public function testEmail(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # Assert default
+        $this->assertEquals('', $object->getEmail());
+
+        # Run function
+        $object->setEmail('test@example.com');
+
+        # Assert result
+        $this->assertEquals('test@example.com', $object->getEmail());
+    }
+
+
+    public function testBuzer(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # Assert default
+        $this->assertEquals(true, $object->getBuzer());
+
+        # Run function
+        $object->setBuzer(false);
+
+        # Assert result
+        $this->assertEquals(false, $object->getBuzer());
+    }
+
+
+    public function testClass(): void
     {
         # Setup
         # (1) Instance
@@ -146,6 +197,9 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
             'yet/another/class'
         ];
 
+        # Assert default
+        $this->assertEquals('', $object->getClass());
+
         # Run function
         foreach ($classes as $class) {
             $object->setClass($class);
@@ -161,7 +215,35 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
     }
 
 
-    public function testSetLinkStyle(): void
+    # TODO: Create test case
+    public function testLineBreak(): void {}
+
+
+    public function testInvalidLineBreak(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # (2) Line breaks
+        $lineBreaks = [
+            'not-ohne',
+            'not-mit',
+            'not-auto',
+        ];
+
+        # Assert exception
+        $this->expectException(\Exception::class);
+
+        foreach ($lineBreaks as $lineBreak) {
+            # Run function
+            $object->setLineBreak($lineBreak);
+            $object->dejurify(self::$text);
+        }
+    }
+
+
+    public function testLinkStyle(): void
     {
         # Setup
         # (1) Instance
@@ -183,7 +265,7 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
 
             # Assert result
             foreach ($dom->getElementsByTagName('a') as $index => $node) {
-                $this->assertEquals($node->textContent, $results[$index]);
+                $this->assertEquals($results[$index], $node->textContent);
             }
 
             $this->assertEquals($linkStyle, $object->getLinkStyle());
@@ -214,7 +296,43 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
     }
 
 
-    public function testSetTooltip(): void
+    public function testTarget(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # (2) HTML document
+        $dom = new \DOMDocument;
+
+        # (3) Targets
+        $targets = [
+            '',
+            '_top',
+            '_self',
+            '_blank',
+            '_parent',
+        ];
+
+        # Assert default
+        $this->assertEquals('', $object->getTarget());
+
+        # Run function
+        foreach ($targets as $target) {
+            $object->setTarget($target);
+            @$dom->loadHTML($object->dejurify(self::$text));
+
+            # Assert result
+            foreach ($dom->getElementsByTagName('a') as $node) {
+                $this->assertEquals($target, $node->getAttribute('target'));
+            }
+
+            $this->assertEquals($target, $object->getTarget());
+        }
+    }
+
+
+    public function testTooltip(): void
     {
         # Setup
         # (1) Instance
@@ -239,7 +357,7 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
 
             # Assert result
             foreach ($dom->getElementsByTagName('a') as $index => $node) {
-                $this->assertEquals($node->getAttribute('title'), $results[$index]);
+                $this->assertEquals($results[$index], $node->getAttribute('title'));
             }
 
             $this->assertEquals($tooltip, $object->getTooltip());
@@ -273,62 +391,21 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
     }
 
 
-    public function testSetLineBreak(): void {}
-
-
-    public function testInvalidLineBreak(): void
+    // setStreamTimeout
+    // setTimeout
+    public function testUserAgent(): void
     {
         # Setup
         # (1) Instance
         $object = new \S1SYPHOS\DejureOnline();
 
-        # (2) Line breaks
-        $lineBreaks = [
-            'not-ohne',
-            'not-mit',
-            'not-auto',
-        ];
-
-        # Assert exception
-        $this->expectException(\Exception::class);
-
-        foreach ($lineBreaks as $lineBreak) {
-            # Run function
-            $object->setLineBreak($lineBreak);
-            $object->dejurify(self::$text);
-        }
-    }
-
-
-    public function testSetTarget(): void
-    {
-        # Setup
-        # (1) Instance
-        $object = new \S1SYPHOS\DejureOnline();
-
-        # (2) HTML document
-        $dom = new \DOMDocument;
-
-        # (3) Targets
-        $targets = [
-            '',
-            '_blank',
-            '_self',
-            '_parent',
-            '_top'
-        ];
+        # Assert default
+        $this->assertIsString($object->getUserAgent());
 
         # Run function
-        foreach ($targets as $target) {
-            $object->setTarget($target);
-            @$dom->loadHTML($object->dejurify(self::$text));
+        $object->setUserAgent('UA MyBrowser v1.2.3 test@example.com');
 
-            # Assert result
-            foreach ($dom->getElementsByTagName('a') as $node) {
-                $this->assertEquals($target, $node->getAttribute('target'));
-            }
-
-            $this->assertEquals($target, $object->getTarget());
-        }
+        # Assert result
+        $this->assertEquals('UA MyBrowser v1.2.3 test@example.com', $object->getUserAgent());
     }
 }
