@@ -391,8 +391,40 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
     }
 
 
-    // setStreamTimeout
-    // setTimeout
+    public function testStreamTimeout(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # Assert default
+        $this->assertEquals(10, $object->getStreamTimeout());
+
+        # Run function
+        $object->setStreamTimeout(0);
+
+        # Assert result
+        $this->assertEquals(0, $object->getStreamTimeout());
+    }
+
+
+    public function testTimeout(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # Assert default
+        $this->assertEquals(3, $object->getTimeout());
+
+        # Run function
+        $object->setTimeout(0);
+
+        # Assert result
+        $this->assertEquals(0, $object->getTimeout());
+    }
+
+
     public function testUserAgent(): void
     {
         # Setup
