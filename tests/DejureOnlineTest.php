@@ -214,6 +214,39 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
     }
 
 
+    public function testSetTooltip(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # (2) HTML document
+        $dom = new \DOMDocument;
+
+        # (3) Tooltips
+        $tooltips = [
+            'ohne' => ['', ''],
+            'neutral' => ['Gesetzestext über dejure.org', 'Gesetzestext über dejure.org'],
+            'beschreibend' => ['Art. 12 GG', '§ 433 BGB: Vertragstypische Pflichten beim Kaufvertrag'],
+            'Gesetze' => ['Art. 12 GG', '§ 433 BGB: Vertragstypische Pflichten beim Kaufvertrag'],
+            'halb' => ['Art. 12 GG', '§ 433 BGB: Vertragstypische Pflichten beim Kaufvertrag'],
+        ];
+
+        # Run function
+        foreach ($tooltips as $tooltip => $results) {
+            $object->setTooltip($tooltip);
+            @$dom->loadHTML($object->dejurify(self::$text));
+
+            # Assert result
+            foreach ($dom->getElementsByTagName('a') as $index => $node) {
+                $this->assertEquals($node->getAttribute('title'), $results[$index]);
+            }
+
+            $this->assertEquals($tooltip, $object->getTooltip());
+        }
+    }
+
+
     public function testInvalidTooltip(): void
     {
         # Setup
@@ -238,6 +271,9 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
             $object->dejurify(self::$text);
         }
     }
+
+
+    public function testSetLineBreak(): void {}
 
 
     public function testInvalidLineBreak(): void
