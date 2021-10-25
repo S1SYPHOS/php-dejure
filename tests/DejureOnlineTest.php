@@ -129,6 +129,23 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
     }
 
 
+    public function testCacheDuration(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # Assert default
+        $this->assertEquals(2, $object->getCacheDuration());
+
+        # Run function
+        $object->setCacheDuration(0);
+
+        # Assert result
+        $this->assertEquals(0, $object->getCacheDuration());
+    }
+
+
     public function testDomain(): void
     {
         # Setup
