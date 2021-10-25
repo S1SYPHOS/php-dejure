@@ -18,6 +18,38 @@ namespace S1SYPHOS\Tests;
 class DejureOnlineTest extends \PHPUnit\Framework\TestCase
 {
     /**
+     * Properties
+     */
+
+    /**
+     * @var string
+     */
+    private static $text;
+
+
+    /**
+     * Setup
+     */
+
+    public static function setUpBeforeClass(): void
+    {
+        # Setup
+        # (1) Text
+        # Enforce UTF-8 encoding
+        $text = '<!DOCTYPE html><meta charset="UTF-8">';
+
+        # Insert test string
+        $text .= '<div>';
+        $text .= 'This is a <strong>simple</strong> HTML text.';
+        $text .= 'It contains legal norms, like Art. 12 GG.';
+        $text .= '.. or § 433 BGB!';
+        $text .= '</div>';
+
+        self::$text = $text;
+    }
+
+
+    /**
      * Tests
      */
 
@@ -25,7 +57,8 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
     {
         # Setup
         # TODO: Install PHP extensions
-        $array = [
+        # (1) Cache drivers
+        $cacheDrivers = [
             'file',
             # 'redis',
             # 'mongo',
@@ -38,7 +71,7 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
             # 'wincache',
         ];
 
-        foreach ($array as $cacheDriver) {
+        foreach ($cacheDrivers as $cacheDriver) {
             # Run function
             $result = new \S1SYPHOS\DejureOnline($cacheDriver);
 
@@ -51,7 +84,9 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
 
     public function testInitInvalidCacheDriver(): void
     {
-        $array = [
+        # Setup
+        # (1) Cache drivers
+        $cacheDrivers = [
             '',
             '?!#@=',
             'mariadb',
@@ -62,7 +97,7 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
         # Assert exception
         $this->expectException(\Exception::class);
 
-        foreach ($array as $cacheDriver) {
+        foreach ($cacheDrivers as $cacheDriver) {
             # Run function
             $result = new \S1SYPHOS\DejureOnline($cacheDriver);
         }
@@ -75,40 +110,189 @@ class DejureOnlineTest extends \PHPUnit\Framework\TestCase
         # (1) Instance
         $object = new \S1SYPHOS\DejureOnline();
 
-        # (2) Text containing legal norms
-        $string  = '<div>';
-        $string .= 'This is a <strong>simple</strong> HTML text.';
-        $string .= 'It contains legal norms, like Art. 12 GG.';
-        $string .= '.. or § 433 BGB!!!';
-        $string .= '</div>';
-
-        # (3) HTML content
+        # (2) HTML document
         $dom = new \DOMDocument;
 
         # Run function
-        @$dom->loadHTML($string);
+        @$dom->loadHTML(self::$text);
         $result = $dom->getElementsByTagName('a');
 
         # Assert result
         $this->assertEquals(count($result), 0);
 
         # Run function
-        @$dom->loadHTML($object->dejurify($string));
+        @$dom->loadHTML($object->dejurify(self::$text));
         $result = $dom->getElementsByTagName('a');
 
         # Assert result
         $this->assertEquals(count($result), 2);
+    }
+
+
+    public function testSetClass(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # (2) HTML document
+        $dom = new \DOMDocument;
+
+        # (3) Classes
+        $classes = [
+            '',
+            'class',
+            'another-class',
+            'yet/another/class'
+        ];
 
         # Run function
-        foreach (['', 'class', 'another-class', 'yet/another/class'] as $class) {
+        foreach ($classes as $class) {
             $object->setClass($class);
-            @$dom->loadHTML($object->dejurify($string));
-            $result = $dom->getElementsByTagName('a');
+            @$dom->loadHTML($object->dejurify(self::$text));
 
             # Assert result
-            foreach ($result as $node) {
+            foreach ($dom->getElementsByTagName('a') as $node) {
                 $this->assertEquals($class, $node->getAttribute('class'));
             }
+
+            $this->assertEquals($class, $object->getClass());
+        }
+    }
+
+
+    public function testSetLinkStyle(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # (2) HTML document
+        $dom = new \DOMDocument;
+
+        # (3) Link styles
+        $linkStyles = [
+            'schmal' => ['12', '433'],
+            'weit' => ['Art. 12 GG', '§ 433 BGB'],
+        ];
+
+        # Run function
+        foreach ($linkStyles as $linkStyle => $results) {
+            $object->setLinkStyle($linkStyle);
+            @$dom->loadHTML($object->dejurify(self::$text));
+
+            # Assert result
+            foreach ($dom->getElementsByTagName('a') as $index => $node) {
+                $this->assertEquals($node->textContent, $results[$index]);
+            }
+
+            $this->assertEquals($linkStyle, $object->getLinkStyle());
+        }
+    }
+
+
+    public function testInvalidLinkStyle(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # (2) Link styles
+        $linkStyles = [
+            'not-weit',
+            'not-schmal',
+        ];
+
+        # Assert exception
+        $this->expectException(\Exception::class);
+
+        foreach ($linkStyles as $linkStyle) {
+            # Run function
+            $object->setLinkStyle($linkStyle);
+            $object->dejurify(self::$text);
+        }
+    }
+
+
+    public function testInvalidTooltip(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # (2) Tooltips
+        $tooltips = [
+            'not-ohne',
+            'not-neutral',
+            'not-beschreibend',
+            'not-Gesetze',
+            'not-halb',
+        ];
+
+        # Assert exception
+        $this->expectException(\Exception::class);
+
+        foreach ($tooltips as $tooltip) {
+            # Run function
+            $object->setTooltip($tooltip);
+            $object->dejurify(self::$text);
+        }
+    }
+
+
+    public function testInvalidLineBreak(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # (2) Line breaks
+        $lineBreaks = [
+            'not-ohne',
+            'not-mit',
+            'not-auto',
+        ];
+
+        # Assert exception
+        $this->expectException(\Exception::class);
+
+        foreach ($lineBreaks as $lineBreak) {
+            # Run function
+            $object->setLineBreak($lineBreak);
+            $object->dejurify(self::$text);
+        }
+    }
+
+
+    public function testSetTarget(): void
+    {
+        # Setup
+        # (1) Instance
+        $object = new \S1SYPHOS\DejureOnline();
+
+        # (2) HTML document
+        $dom = new \DOMDocument;
+
+        # (3) Targets
+        $targets = [
+            '',
+            '_blank',
+            '_self',
+            '_parent',
+            '_top'
+        ];
+
+        # Run function
+        foreach ($targets as $target) {
+            $object->setTarget($target);
+            @$dom->loadHTML($object->dejurify(self::$text));
+
+            # Assert result
+            foreach ($dom->getElementsByTagName('a') as $node) {
+                $this->assertEquals($target, $node->getAttribute('target'));
+            }
+
+            $this->assertEquals($target, $object->getTarget());
         }
     }
 }
